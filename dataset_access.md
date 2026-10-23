@@ -1,0 +1,4 @@
+# Dali v2
+
+Dali dataset is too large to be pushed into git repo. 
+[URL to download dataset](https://zenodo.org/records/3576083?token=eyJhbGciOiJIUzUxMiIsImlhdCI6MTc5MjQyMzgwMywiZXhwIjoxNzk0OTU5OTk5fQ.eyJpZCI6IjZlYTg3NzNiLWMxOGItNDA4MC1hNWZiLTZmNDI4MmFlMTgzNSIsImRhdGEiOnt9LCJyYW5kb20iOiI0NmI3MzE3OGU4ZDY4NjQ2NWI5YjUzYjY5ZjhiOTYyYiJ9.m3C5IKxewtrC1qL26XC_bTMjCuUnDkR3aTVN3sSP4eonqIBoCUxF-MNA7v5gFoLXgjUsK0Qnr9sxTMk3VP0DfA&preview_file=undefined)
