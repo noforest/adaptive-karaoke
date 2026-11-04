@@ -43,14 +43,19 @@ Exemple pour `night` = `n aɪ t` (L = 3) :
 ## Les 5 mouvements possibles
 
 D'une frame à la suivante, seuls ces 5 mouvements sont possibles. La dernière colonne indique combien de fois chacun est utilisé dans le chemin d'*Embers* (6963 transitions au total).
-
-| # | depuis | vers | écart d'état | sens concret | code | sur *Embers* |
-|---|---|---|---|---|---|---|
-| ① | token X | **le même** token X | +0 | X dure une 2ᵉ frame (rare) | `a`, opt=0 | 56 |
-| ② | token X | le ε juste après X | +1 | X est émis, on retombe en ε | `c` (bloc ε), opt=1 | 507 |
-| ③ | token X | le token suivant Y | **+2** | X et Y sont si proches qu'il n'y a pas de ε entre eux | `b`, opt=2 | 293 |
-| ④ | ε | **le même** ε | +0 | toujours rien de nouveau (tenue, silence, instrumental) | `a`, opt=0 | **5600** |
-| ⑤ | ε | le token suivant | +1 | un nouveau token est émis | `c`, opt=1 | 507 |
+┌─────┬───────────────────────┬────────────────────────────────────────────────────────────────┬──────────────────────┐
+│  #  │       mouvement       │                              sens                              │ fréquence sur Embers │
+├─────┼───────────────────────┼────────────────────────────────────────────────────────────────┼──────────────────────┤
+│ ④   │ ε → même ε            │ l'attente continue (tenue, silence, intro…)                    │ 5 600                │
+├─────┼───────────────────────┼────────────────────────────────────────────────────────────────┼──────────────────────┤
+│ ⑤   │ ε → token suivant     │ un nouveau son commence (le pic)                               │ 507                  │
+├─────┼───────────────────────┼────────────────────────────────────────────────────────────────┼──────────────────────┤
+│ ②   │ token → ε suivant     │ le pic est fini, on entre dans l'attente                       │ 507                  │
+├─────┼───────────────────────┼────────────────────────────────────────────────────────────────┼──────────────────────┤
+│ ③   │ token → token suivant │ deux sons collés, sans attente entre eux                       │ 293                  │
+├─────┼───────────────────────┼────────────────────────────────────────────────────────────────┼──────────────────────┤
+│ ①   │ token → même token    │ le même son déborde sur une frame de plus (pas une répétition) │ 56                   │
+└─────┴───────────────────────┴────────────────────────────────────────────────────────────────┴──────────────────────┘
 
 Règles globales :
 - le chemin **commence à l'état 0** (frame 0 = ε) et **finit à l'état 2L** (dernier ε) ;
