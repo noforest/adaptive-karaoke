@@ -3,9 +3,11 @@ import librosa.display
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+from pathlib import Path
 
 # Load an audio file. Use your own file path.
-audio_folder = '/home/lhenkel/Projects/free-karaoke/data/songs'
+base_dir = Path(__file__).resolve().parent.parent
+audio_folder = base_dir / 'data' / 'songs'
 audio_path = audio_folder + '/' + os.listdir(audio_folder)[0]
 y, sr = librosa.load(audio_path)
 
