@@ -1,7 +1,9 @@
 """
 Read DALI v2.0 annotations and f0 from the extracted folders in data/.
-annot_tismir --> annotations
-f0_tismir --> la mélodie de la voix
+annot_tismir/<id>.gz --> annotations manuelles: paroles alignées dans le temps
+    (notes, mots, lignes, paragraphes, phonèmes) + métadonnées du morceau
+f0_tismir/<id>.f0.npz --> mélodie de la voix estimée par un modèle sur l'audio
+    (72 demi-tons x frames), sert à vérifier l'alignement des annotations
 """
 import gzip
 import pickle
@@ -52,9 +54,13 @@ if __name__ == "__main__":
     print(f"annot['errors'] = {annot['errors']}\n")
 
     print("========= Exemple =========")
+    print(annot["info"]["audio"], "-", annot["info"]["title"])
     print(annot["info"]["artist"], "-", annot["info"]["title"])
     print(annot["annotations"]["annot"]["words"][0])
-    print(read_f0(song_id)["f0"].shape)
+
+    f0 = read_f0(song_id)
+    print(f"f0.keys() = {f0.keys()}")
+    print(f0["f0"].shape)
 
 
     """
