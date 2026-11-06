@@ -8,14 +8,14 @@ f0_tismir/<id>.f0.npz --> mélodie de la voix estimée par un modèle sur l'audi
 import gzip
 import pickle
 from pathlib import Path
-import youtube_dl
 
 import numpy as np
+import yt_dlp
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 ANNOT_DIR = DATA_DIR / "annot_tismir"
 F0_DIR = DATA_DIR / "f0_tismir"
-BASE_URL = "http://www.youtube.com/watch?v="
+BASE_URL = "https://www.youtube.com/watch?v="
 
 class Annotations:
     """Replaces DALI.Annotations so the DALI package is not needed."""
@@ -47,96 +47,48 @@ def read_f0(song_id):
 
 
 
-class MyLogger(object):
-    def debug(self, msg):
-        print(msg)
-
-    def warning(self, msg):
-        print(msg)
-
-    def error(self, msg):
-        print(msg)
-
-
-def my_hook(d):
-    if d['status'] == 'finished':
-        print('Done downloading, now converting ...')
-
-def audio_from_url(url, name, path_output, errors=[]):
-    """
-    Download audio from a url.
-        url : str
-            url of the video (after watch?v= in youtube)
-        name : str
-            used to store the data
-        path_output : str
-            path for storing the data
-    """
-    error = None
-
-    # ydl(youtube_dl.YoutubeDL): extractor
-    ydl = get_my_ydl(path_output)
-
-    ydl.params['outtmpl'] = ydl.params['outtmpl'] % {
-        'ext': ydl.params['postprocessors'][0]['preferredcodec'],
-        'title': name}
-
-    if ydl:
-        print ("Downloading " + url)
-        try:
-            ydl.download([BASE_URL + url])
-        except Exception as e:
-            print(e)
-            error = e
-    if error:
-        errors.append([name, url, error])
-    return
-
-def get_my_ydl(directory:str):
-    ydl = None
-    outtmpl = None
-    outtmpl = Path(directory +  f'/{id}.mp3')
-    ydl_opts = {'format': 'bestaudio/best',
-                'postprocessors': [{'key': 'FFmpegExtractAudio',
-                                    'preferredcodec': 'mp3',
-                                    'preferredquality': '320'}],
-                'outtmpl': outtmpl,
-                'logger': MyLogger(),
-                'progress_hooks': [my_hook],
-                'verbose': False,
-                'ignoreerrors': False,
-                'external_downloader': 'ffmpeg',
-                'nocheckcertificate': True}
-                # 'external_downloader_args': "-j 8 -s 8 -x 8 -k 5M"}
-                # 'maxBuffer': 'Infinity'}
-                #  it uses multiple connections for speed up the downloading
-                #  'external-downloader': 'ffmpeg'}
-    ydl = youtube_dl.YoutubeDL(ydl_opts)
-    ydl.cache.remove()
-    import time
-    time.sleep(.5)
-    return ydl
-def download_song(annot, filedir):
-    id, url = annot['info']['id'], annot['info']['audio']['url']
-    audio_from_url(url, id, filedir)
+def download_song(annot, out_dir):
+    """Download the song audio as <out_dir>/<id>.mp3. Returns True if it worked."""
+    song_id = annot["info"]["id"]
+    url = BASE_URL + annot["info"]["audio"]["url"]
+    opts = {
+        "format": "bestaudio/best",
+        "outtmpl": f"{out_dir}/{song_id}.%(ext)s",
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3"}],
+        "quiet": True,
+    }
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([url])
+        return True
+    except yt_dlp.utils.DownloadError as e:
+        print(f"{song_id}: {e}")
+        return False
 
 
 if __name__ == "__main__":
-    song_id = list_ids()[0]
-    annot = read_annotation(song_id)
-    print(f"annot.keys() = {annot.keys()}\n")
-    print(f"annot['info'].keys() = {annot['info'].keys()}\n")
-    print(f"annot['annotations'].keys() = {annot['annotations'].keys()}\n")
-    print(f"annot['errors'] = {annot['errors']}\n")
+    # song_id = list_ids()[0]
+    # annot = read_annotation(song_id)
+    # print(f"annot.keys() = {annot.keys()}\n")
+    # print(f"annot['info'].keys() = {annot['info'].keys()}\n")
+    # print(f"annot['annotations'].keys() = {annot['annotations'].keys()}\n")
+    # print(f"annot['errors'] = {annot['errors']}\n")
+    #
+    # print("========= Exemple =========")
+    # print(annot["info"]["audio"], "-", annot["info"]["title"])
+    # print(annot["info"]["artist"], "-", annot["info"]["title"])
+    # print(annot["annotations"]["annot"]["words"][0])
+    #
+    # f0 = read_f0(song_id)
+    # print(f"f0.keys() = {f0.keys()}")
+    # print(f0["f0"].shape)
 
-    print("========= Exemple =========")
-    print(annot["info"]["audio"], "-", annot["info"]["title"])
-    print(annot["info"]["artist"], "-", annot["info"]["title"])
-    print(annot["annotations"]["annot"]["words"][0])
+    songs_id = list_ids()
+    for song_id in songs_id:
+        annot = read_annotation(song_id)
+        download_song(annot, "/home/nforest001/sync-enseirb/s9/_projet_semestriel/free-karaoke/data/songs")
 
-    f0 = read_f0(song_id)
-    print(f"f0.keys() = {f0.keys()}")
-    print(f0["f0"].shape)
+     
 
 
     """
