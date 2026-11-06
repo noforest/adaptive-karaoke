@@ -17,6 +17,8 @@ import yt_dlp
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 ANNOT_DIR = DATA_DIR / "annot_tismir"
 F0_DIR = DATA_DIR / "f0_tismir"
+SONGS_DIR = DATA_DIR / "songs"
+LOGS_DIR = DATA_DIR / "logs"
 BASE_URL = "https://www.youtube.com/watch?v="
 
 ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -\/]*[@-~])')
@@ -62,10 +64,11 @@ def download_song(annot, out_dir):
         "quiet": True,
         "js_runtimes": {"node": {}},
     }
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
-        with open("logs/log_successful.txt", 'a') as log:
+        with open(LOGS_DIR / "log_successful.txt", 'a') as log:
             log.write(f"{song_id}\n")
         return True
     except yt_dlp.utils.DownloadError as e:
@@ -73,7 +76,7 @@ def download_song(annot, out_dir):
         raw_msg = str(e)
         clean_msg = ansi_escape.sub('', raw_msg)
         final_msg = clean_msg.encode('ascii', 'ignore').decode()
-        with open('logs/log_fail.txt', 'a') as log:
+        with open(LOGS_DIR / "log_fail.txt", 'a') as log:
             log.write(f"{song_id} {final_msg}\n")
         return False
 
@@ -95,15 +98,10 @@ if __name__ == "__main__":
     # print(f"f0.keys() = {f0.keys()}")
     # print(f0["f0"].shape)
 
-
-    if len(sys.argv) != 2:
-        print("usage:")
-        sys.exit(1)
-    path = sys.argv[1]
     songs_id = list_ids()
     for song_id in songs_id:
         annot = read_annotation(song_id)
-        download_song(annot, path)
+        download_song(annot, SONGS_DIR)
 
 
 
