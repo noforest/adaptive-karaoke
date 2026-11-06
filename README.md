@@ -12,3 +12,8 @@
 ### Liens
 - [https://github.com/jhuang448/LyricsAlignment-Multilingual/](https://github.com/jhuang448/LyricsAlignment-Multilingual/)
 - [https://github.com/charlesbrazier/opera_tracker/blob/master/fast_dtw.pyx](https://github.com/charlesbrazier/opera_tracker/blob/master/fast_dtw.pyx)
+
+### Dépendances
+
+pip install -U "yt-dlp[default]"
+

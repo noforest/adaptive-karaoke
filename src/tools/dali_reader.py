@@ -56,6 +56,7 @@ def download_song(annot, out_dir):
         "outtmpl": f"{out_dir}/{song_id}.%(ext)s",
         "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3"}],
         "quiet": True,
+        "js_runtimes": {"node": {}},
     }
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
