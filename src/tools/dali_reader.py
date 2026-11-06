@@ -9,6 +9,7 @@ import gzip
 import pickle
 from pathlib import Path
 import re
+import sys
 
 import numpy as np
 import yt_dlp
@@ -94,11 +95,15 @@ if __name__ == "__main__":
     # print(f"f0.keys() = {f0.keys()}")
     # print(f0["f0"].shape)
 
+
+    if len(sys.argv) != 2:
+        print("usage:")
+        sys.exit(1)
+    path = sys.argv[1]
     songs_id = list_ids()
     for song_id in songs_id:
         annot = read_annotation(song_id)
-        download_song(annot, "/home/nforest001/sync-enseirb/s9/_projet_semestriel/free-karaoke/data/songs")
-        break
+        download_song(annot, path)
 
 
 
