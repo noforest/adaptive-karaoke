@@ -3,38 +3,34 @@ import librosa.display
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+from pathlib import Path
 
-# Load an audio file. Use your own file path.
-audio_folder = '/home/lhenkel/Projects/free-karaoke/data/songs'
-audio_path = audio_folder + '/' + os.listdir(audio_folder)[0]
-y, sr = librosa.load(audio_path)
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+SONGS_DIR = DATA_DIR / "songs"
+SPECTRO_DIR = DATA_DIR / "spectro"
 
-print(f"Audio length: {len(y)} samples")
-print(f"Sample rate: {sr} Hz")
-print(f"Duration: {len(y)/sr:.2f} seconds")
+def wav_to_spectro():
+    SPECTRO_DIR.mkdir(exist_ok=True)
+    songs_path = os.listdir(SONGS_DIR)
+    for song in songs_path:
+        if not song.endswith(".wav"):
+            continue
+        spectro_path = SPECTRO_DIR / f"{Path(song).stem}.png"
+        if not spectro_path.exists():
+            y, sr = librosa.load(SONGS_DIR / song)
+            D = librosa.stft(y)
+            S_db = librosa.amplitude_to_db(np.abs(D), ref=np.max)
+
+            librosa.display.specshow(S_db, sr=sr, x_axis='time', y_axis='log', cmap='viridis')
+
+            plt.colorbar(format='%+2.0f dB')
+            plt.title('Spectrogram of Audio File')
+            plt.xlabel('Time (s)')
+            plt.ylabel('Frequency (Hz)')
+            plt.tight_layout()
+            plt.savefig(spectro_path)
+            plt.close()
 
 
-D = librosa.stft(y)
-
-# Convert the complex values to magnitude
-S_db = librosa.amplitude_to_db(abs(D), ref=np.max)
-
-print(f"STFT shape: {D.shape}")
-print(f"Magnitude Spectrogram shape: {S_db.shape}")
-
-plt.figure(figsize=(10, 6))
-
-# Display the spectrogram
-librosa.display.specshow(S_db, sr=sr, x_axis='time', y_axis='log', cmap='viridis')
-
-# Add a color bar to show amplitude scale
-plt.colorbar(format='%+2.0f dB')
-
-# Set the title and labels
-plt.title('Spectrogram of Audio File')
-plt.xlabel('Time (s)')
-plt.ylabel('Frequency (Hz)')
-
-# Show the plot
-plt.tight_layout()
-plt.show()
+if __name__ == "__main__":
+    wav_to_spectro()
