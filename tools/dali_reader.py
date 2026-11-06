@@ -46,6 +46,33 @@ def read_f0(song_id):
 if __name__ == "__main__":
     song_id = list_ids()[0]
     annot = read_annotation(song_id)
+    print(f"annot.keys() = {annot.keys()}\n")
+    print(f"annot['info'].keys() = {annot['info'].keys()}\n")
+    print(f"annot['annotations'].keys() = {annot['annotations'].keys()}\n")
+    print(f"annot['errors'] = {annot['errors']}\n")
+
+    print("========= Exemple =========")
     print(annot["info"]["artist"], "-", annot["info"]["title"])
     print(annot["annotations"]["annot"]["words"][0])
     print(read_f0(song_id)["f0"].shape)
+
+
+    """
+    annot
+    ├── "info"                 → infos sur le morceau
+    │   ├── "artist"           → "Francesco Renga"
+    │   ├── "title"            → "Alba"
+    │   ├── "audio"            → {"url": id YouTube, "path": ..., "working": ...}
+    │   ├── "metadata"         → {"album", "release_date", "genres", "language", ...}
+    │   └── "scores", "id", ...
+    ├── "annotations"
+    │   ├── "type"             → "horizontal"
+    │   ├── "annot_param"      → {"fr": ..., "offset": ...}
+    │   └── "annot"            → LES PAROLES
+    │       ├── "notes"        → liste de segments
+    │       ├── "words"        → liste de segments
+    │       ├── "lines"        → liste de segments
+    │       ├── "paragraphs"   → liste de segments
+    │       └── "phonemes"     → liste de segments
+    └── "errors"               → None
+    """
