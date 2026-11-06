@@ -21,7 +21,7 @@ def wav_to_spectro():
             D = librosa.stft(y)
             S_db = librosa.amplitude_to_db(np.abs(D), ref=np.max)
 
-            librosa.display.specshow(S_db, sr=sr, x_axis='time', y_axis='log', cmap='viridis')
+            librosa.display.specshow(S_db, sr=sr, x_axis='time', y_axis='log', cmap='inferno')
 
             plt.colorbar(format='%+2.0f dB')
             plt.title('Spectrogram of Audio File')
