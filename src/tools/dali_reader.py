@@ -8,6 +8,7 @@ f0_tismir/<id>.f0.npz --> mélodie de la voix estimée par un modèle sur l'audi
 import gzip
 import pickle
 from pathlib import Path
+import re
 
 import numpy as np
 import yt_dlp
@@ -16,6 +17,8 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 ANNOT_DIR = DATA_DIR / "annot_tismir"
 F0_DIR = DATA_DIR / "f0_tismir"
 BASE_URL = "https://www.youtube.com/watch?v="
+
+ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -\/]*[@-~])')
 
 class Annotations:
     """Replaces DALI.Annotations so the DALI package is not needed."""
@@ -54,16 +57,23 @@ def download_song(annot, out_dir):
     opts = {
         "format": "bestaudio/best",
         "outtmpl": f"{out_dir}/{song_id}.%(ext)s",
-        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3"}],
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "wav"}],
         "quiet": True,
         "js_runtimes": {"node": {}},
     }
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
+        with open("log_successful.txt", 'a') as log:
+            log.write(f"{song_id}\n")
         return True
     except yt_dlp.utils.DownloadError as e:
         print(f"{song_id}: {e}")
+        raw_msg = str(e)
+        clean_msg = ansi_escape.sub('', raw_msg)
+        final_msg = clean_msg.encode('ascii', 'ignore').decode()
+        with open('log_fail.txt', 'a') as log:
+            log.write(f"{song_id} {final_msg}\n")
         return False
 
 
@@ -88,8 +98,9 @@ if __name__ == "__main__":
     for song_id in songs_id:
         annot = read_annotation(song_id)
         download_song(annot, "/home/nforest001/sync-enseirb/s9/_projet_semestriel/free-karaoke/data/songs")
+        break
 
-     
+
 
 
     """
