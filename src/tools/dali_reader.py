@@ -65,7 +65,7 @@ def download_song(annot, out_dir):
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
-        with open("log_successful.txt", 'a') as log:
+        with open("logs/log_successful.txt", 'a') as log:
             log.write(f"{song_id}\n")
         return True
     except yt_dlp.utils.DownloadError as e:
@@ -73,7 +73,7 @@ def download_song(annot, out_dir):
         raw_msg = str(e)
         clean_msg = ansi_escape.sub('', raw_msg)
         final_msg = clean_msg.encode('ascii', 'ignore').decode()
-        with open('log_fail.txt', 'a') as log:
+        with open('logs/log_fail.txt', 'a') as log:
             log.write(f"{song_id} {final_msg}\n")
         return False
 
