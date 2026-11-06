@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 ANNOT_DIR = DATA_DIR / "annot_tismir"
 F0_DIR = DATA_DIR / "f0_tismir"
 
