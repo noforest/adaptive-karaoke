@@ -1,0 +1,264 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Réglages du spectrogramme</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout : une colonne de lecture (~68ch), les figures débordent un peu plus large ; une couleur par paramètre */
+:root{
+  --bg:#F3F5F9; --surface:#FFFFFF; --fg:#151D2B; --muted:#5B6679; --line:#D3DAE5;
+  --fft:#C8650A; --hop:#2B64D4; --mel:#118057; --bad:#C2372F;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E131B; --surface:#161D28; --fg:#E5EAF2; --muted:#97A3B6; --line:#2A3443;
+  --fft:#F39A3D; --hop:#6E9DF6; --mel:#3FC48C; --bad:#F06A60; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E131B; --surface:#161D28; --fg:#E5EAF2; --muted:#97A3B6; --line:#2A3443;
+  --fft:#F39A3D; --hop:#6E9DF6; --mel:#3FC48C; --bad:#F06A60; color-scheme:dark}
+
+body{background:var(--bg);color:var(--fg);font:17px/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+section{display:flex;flex-direction:column;gap:14px}
+.prose{max-width:68ch}
+h1,h2{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(22px,3.2vw,29px);font-weight:600}
+p{margin:0}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+.k-fft{color:var(--fft);font-weight:700}.k-hop{color:var(--hop);font-weight:700}.k-mel{color:var(--mel);font-weight:700}
+.lede{font-size:19px;color:var(--muted)}
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.svgwrap{overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--mono);font-size:12px;fill:var(--muted)}
+svg .lbl{fill:var(--fg);font-weight:600}
+figcaption{font-size:15px;color:var(--muted);max-width:70ch}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 24px;align-items:end}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label{font:600 13px/1.3 var(--mono)}
+.ctl input,.ctl select{width:100%;accent-color:var(--hop);font:inherit}
+.ctl select{padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--fg);font-family:var(--mono);font-size:14px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button{font:600 13px var(--mono);padding:8px 12px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+button:hover{border-color:var(--hop)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--hop);outline-offset:2px}
+.readout{display:flex;flex-wrap:wrap;gap:8px 22px;font:14px var(--mono);font-variant-numeric:tabular-nums}
+.readout b{font-weight:600}
+.callout{border-left:3px solid var(--fft);padding:4px 0 4px 16px;max-width:68ch}
+pre{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto;font:14px/1.6 var(--mono)}
+.c{color:var(--muted)}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:15px;min-width:480px}
+th,td{text-align:left;padding:8px 14px 8px 0;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+.ok{color:var(--mel);font-weight:700}.ko{color:var(--bad);font-weight:700}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<main>
+  <header class="prose" style="display:flex;flex-direction:column;gap:12px">
+    <span class="eyebrow">free-karaoke · audio-preprocessing.py</span>
+    <h1>Fenêtre, décalage et bandes mel</h1>
+    <p class="lede">On ne découpe pas l'audio en morceaux collés les uns aux autres. On fait <b>glisser une fenêtre</b>. <span class="k-fft">n_fft</span> dit quelle largeur elle a, <span class="k-hop">hop_length</span> dit de combien on la pousse à chaque fois. Ce sont deux réglages indépendants.</p>
+  </header>
+
+  <section>
+    <span class="eyebrow">1 · la fenêtre glissante</span>
+    <h2>Une fenêtre de 32 ms qu'on pousse de 10 ms</h2>
+    <p class="prose"><b>Un échantillon</b>, c'est une valeur de l'onde mesurée à un instant. À 16 000 Hz, on en a 16 000 par seconde, donc 512 échantillons = 512 / 16 000 = 0,032 s = 32 ms. <b>La forme en bosse</b> (fenêtre de Hann) : avant la FFT, on multiplie les 512 valeurs par une cloche. Le milieu compte à 100 %, les bords à presque 0 %, pour éviter le « clic » qu'on aurait en coupant net l'onde aux bords.</p>
+    <p class="prose">Chaque bosse orange est une fenêtre de <span class="k-fft">512 échantillons = 32 ms</span>. Elle produit <b>une colonne</b> du spectrogramme. La fenêtre suivante démarre seulement <span class="k-hop">160 échantillons = 10 ms</span> plus loin, donc les fenêtres <b>se chevauchent</b>. Joue avec les curseurs.</p>
+    <figure>
+      <div class="controls">
+        <div class="ctl">
+          <label for="nfft"><span class="k-fft">n_fft</span> (largeur de la fenêtre)</label>
+          <select id="nfft">
+            <option value="256">256 échantillons = 16 ms</option>
+            <option value="512" selected>512 échantillons = 32 ms</option>
+            <option value="1024">1024 échantillons = 64 ms</option>
+          </select>
+        </div>
+        <div class="ctl">
+          <label for="hop"><span class="k-hop">hop_length</span> = <span id="hopv">160 (10 ms)</span></label>
+          <input id="hop" type="range" min="40" max="800" step="8" value="160">
+        </div>
+        <div class="btns">
+          <button id="b-proj" type="button">Réglage du projet</button>
+          <button id="b-nolap" type="button">hop = n_fft (sans chevauchement)</button>
+        </div>
+      </div>
+      <div class="svgwrap"><svg id="fig1" viewBox="0 0 800 330" role="img" aria-label="Fenêtres de Hann qui glissent sur le signal et colonnes du spectrogramme obtenues"></svg></div>
+      <div class="readout" id="readout"></div>
+      <figcaption>La bande grise « couverture » montre combien chaque instant compte au total. Une fenêtre pèse fort au centre et presque rien sur les bords (fenêtre de Hann). Mets hop = n_fft : la couverture tombe à zéro entre deux fenêtres, l'audio à cet endroit est quasiment ignoré.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <span class="eyebrow">2 · quand chacun sert</span>
+    <h2>Les deux servent en même temps, pour chaque colonne</h2>
+    <p class="prose"><span class="k-hop">hop_length</span> dit <b>où commence</b> la fenêtre. <span class="k-fft">n_fft</span> dit <b>combien d'échantillons on prend</b> à partir de là. Voici ce que fait librosa en vrai :</p>
+<pre><span class="c"># y = l'audio, 16 000 échantillons par seconde</span>
+for i in range(nb_colonnes):
+    debut    = i * <span class="k-hop">hop_length</span>            <span class="c"># 0, 160, 320, 480 ...  (tous les 10 ms)</span>
+    morceau  = y[debut : debut + <span class="k-fft">n_fft</span>]     <span class="c"># toujours 512 échantillons (32 ms)</span>
+    colonne[i] = FFT(morceau * hann)     <span class="c"># -> 257 valeurs de fréquence</span></pre>
+    <div class="callout prose">
+      <p><b>Ta phrase « ça peut prendre plusieurs durées de 30 ms à la fois »</b> : non. Chaque colonne prend <b>exactement</b> 32 ms, ni plus ni moins. C'est l'inverse : <b>un même instant</b> de l'audio tombe dans environ 32 / 10 ≈ <b>3 colonnes</b> voisines. Sur l'image du spectrogramme, une colonne fait 10 ms de large (l'écart entre deux colonnes), mais elle résume 32 ms de son.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">3 · pourquoi pas une seule valeur</span>
+    <h2>Pourquoi ne pas juste prendre des fenêtres de 10 ms collées ?</h2>
+    <p class="prose">Parce que la largeur de la fenêtre fixe la <b>précision en fréquence</b> : écart entre deux fréquences mesurées = 16 000 / n_fft. Une fenêtre courte ne sait plus séparer deux notes proches. Exemple avec La3 (220 Hz) et Si3 (247 Hz) :</p>
+    <figure>
+      <div class="svgwrap"><svg id="fig2" viewBox="0 0 800 220" role="img" aria-label="Cases de fréquence de 31 Hz contre 100 Hz, deux notes proches"></svg></div>
+      <figcaption>Avec 512 échantillons, chaque case fait 31,25 Hz : les deux notes tombent dans deux cases différentes. Avec 160 échantillons (10 ms), chaque case fait 100 Hz : les deux notes sont mélangées dans la même case.</figcaption>
+    </figure>
+    <p class="prose">D'où les deux réglages séparés : <span class="k-fft">une fenêtre large (32 ms)</span> pour bien voir les fréquences, et <span class="k-hop">un pas petit (10 ms)</span> pour avoir beaucoup de colonnes par seconde et caler les paroles précisément. Le chevauchement est le prix à payer, et il ne coûte que du calcul.</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">4 · n_mels</span>
+    <h2>Pourquoi 80 bandes mel ?</h2>
+    <p class="prose">La FFT donne <b>257 cases</b> de 31,25 Hz, toutes de la même largeur. Mais l'oreille (et la voix) s'intéresse aux détails dans les graves, beaucoup moins dans les aigus. Les filtres mel regroupent ces 257 cases en bandes <b>étroites en bas, larges en haut</b>.</p>
+    <figure>
+      <div class="svgwrap"><svg id="fig3" viewBox="0 0 800 250" role="img" aria-label="257 cases FFT linéaires au-dessus de 80 filtres mel triangulaires"></svg></div>
+      <figcaption>En haut, les 257 cases FFT (largeur fixe). En bas, les 80 filtres mel : chaque triangle fait la moyenne des cases qu'il couvre et devient une ligne du spectrogramme.</figcaption>
+    </figure>
+    <p class="prose">80 n'est pas sorti d'une formule. C'est la valeur reprise par Tacotron 2 et Whisper parce qu'elle marche bien sur la voix. Mais avec <b>nos</b> réglages (16 kHz, n_fft = 512) on peut voir pourquoi c'est un bon choix :</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>n_mels</th><th>écart des bandes en bas</th><th>écart en haut (8 kHz)</th><th>verdict</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">40</td><td>74 Hz</td><td>585 Hz</td><td class="ko">trop grossier, les harmoniques de la voix se mélangent</td></tr>
+        <tr><td class="mono">80</td><td>37 Hz</td><td>301 Hz</td><td class="ok">juste au-dessus d'une case FFT (31 Hz)</td></tr>
+        <tr><td class="mono">128</td><td>23 Hz</td><td>191 Hz</td><td class="ko">plus fin qu'une case FFT : bandes en double, rien de gagné</td></tr>
+      </tbody>
+    </table></div>
+    <p class="prose">Une bande mel ne peut pas être plus précise que les cases FFT qu'elle regroupe. À 80, les bandes du bas font à peu près une case : c'est le maximum utile. Au-delà, on ajoute des lignes qui répètent la même info. 128 (la valeur par défaut de librosa) a du sens avec une fenêtre plus large ou une fréquence d'échantillonnage plus haute, pour la musique par exemple.</p>
+  </section>
+</main>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg", SR=16000;
+  const el=(tag,attrs,parent,text)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;};
+
+  /* ---------- Figure 1 : fenêtres glissantes ---------- */
+  const fig1=document.getElementById("fig1"), nfftSel=document.getElementById("nfft"), hopIn=document.getElementById("hop");
+  const T0=0,T1=130,X0=110,X1=780, x=t=>X0+(t-T0)*(X1-X0)/(T1-T0);
+  const env=t=> t<45 ? 0.18 : 0.18+0.82*Math.exp(-(t-45)/40);           // une syllabe qui démarre à 45 ms
+  const wave=t=> env(t)*(Math.sin(2*Math.PI*t*0.55)+0.45*Math.sin(2*Math.PI*t*1.7+1));
+
+  function draw1(){
+    const nfft=+nfftSel.value, hop=+hopIn.value, L=nfft/SR*1000, H=hop/SR*1000;
+    document.getElementById("hopv").textContent=hop+" ("+(+H.toFixed(1))+" ms)";
+    fig1.textContent="";
+    const defs=el("defs",{},fig1), cp=el("clipPath",{id:"clip1"},defs); el("rect",{x:X0,y:0,width:X1-X0,height:330},cp);
+    // étiquettes de lignes
+    el("text",{x:8,y:58,class:"lbl"},fig1,"audio");
+    el("text",{x:8,y:150,class:"lbl"},fig1,"fenêtres");
+    el("text",{x:8,y:166},fig1,"(une par");
+    el("text",{x:8,y:180},fig1,"colonne)");
+    el("text",{x:8,y:232,class:"lbl"},fig1,"couverture");
+    el("text",{x:8,y:293,class:"lbl"},fig1,"spectro");
+    const g=el("g",{"clip-path":"url(#clip1)"},fig1);
+    // onde
+    let d=""; for(let t=T0;t<=T1;t+=0.25){d+=(d?"L":"M")+x(t).toFixed(1)+" "+(55-24*wave(t)).toFixed(1);}
+    el("path",{d,fill:"none",stroke:"var(--muted)","stroke-width":1.2},g);
+    // fenêtres (center=True : la colonne i est centrée sur i*hop)
+    const n=Math.floor(T1/H)+1, k=Math.max(0,Math.round(50/H));
+    const base=200, amp=88, hann=(t,c)=>{const u=(t-(c-L/2))/L;return (u<0||u>1)?0:0.5-0.5*Math.cos(2*Math.PI*u);};
+    for(let i=0;i<n;i++){
+      const c=i*H; let p="";
+      for(let t=c-L/2;t<=c+L/2+1e-9;t+=L/60){p+=(p?"L":"M")+x(t).toFixed(1)+" "+(base-amp*hann(t,c)).toFixed(1);}
+      if(i===k){el("path",{d:p+"Z",fill:"var(--fft)","fill-opacity":.22,stroke:"var(--fft)","stroke-width":2.4},g);}
+      else el("path",{d:p,fill:"none",stroke:"var(--fft)","stroke-opacity":.5,"stroke-width":1.2},g);
+    }
+    el("line",{x1:X0,x2:X1,y1:base,y2:base,stroke:"var(--line)"},g);
+    // accolades n_fft et hop
+    const ck=k*H, yb=98;
+    el("line",{x1:x(ck-L/2),x2:x(ck+L/2),y1:yb,y2:yb,stroke:"var(--fft)","stroke-width":2},g);
+    [ck-L/2,ck+L/2].forEach(t=>el("line",{x1:x(t),x2:x(t),y1:yb-5,y2:yb+5,stroke:"var(--fft)","stroke-width":2},g));
+    el("text",{x:x(ck),y:yb-8,"text-anchor":"middle",style:"fill:var(--fft);font-weight:600"},g,"n_fft = "+(+L.toFixed(1))+" ms");
+    if(H<T1){
+      const yh=base+12;
+      el("line",{x1:x(ck),x2:x(ck+H),y1:yh,y2:yh,stroke:"var(--hop)","stroke-width":2.4},g);
+      [ck,ck+H].forEach(t=>el("line",{x1:x(t),x2:x(t),y1:base-amp,y2:yh+4,stroke:"var(--hop)","stroke-dasharray":"3 3"},g));
+      el("text",{x:x(ck+H)+6,y:yh+4,style:"fill:var(--hop);font-weight:600"},g,"hop = "+(+H.toFixed(1))+" ms");
+    }
+    // couverture
+    const cb=248, ch=28; let s=[],mx=0;
+    for(let t=T0;t<=T1;t+=0.25){let v=0;for(let i=0;i<n;i++)v+=hann(t,i*H);s.push([t,v]);if(t>L/2&&t<T1-L/2)mx=Math.max(mx,v);}
+    mx=mx||1; let cp2="M"+x(T0)+" "+cb;
+    s.forEach(([t,v])=>cp2+="L"+x(t).toFixed(1)+" "+(cb-ch*Math.min(v/mx,1.15)).toFixed(1));
+    el("path",{d:cp2+"L"+x(T1)+" "+cb+"Z",fill:"var(--muted)","fill-opacity":.25,stroke:"var(--muted)","stroke-width":1},g);
+    // colonnes du spectrogramme
+    const sy=270, sh=40;
+    for(let i=0;i<n;i++){
+      const c=i*H; let e=0; for(let t=c-L/2;t<=c+L/2;t+=1)e+=env(Math.max(0,t))*hann(t,c);
+      const op=Math.min(.95,.12+e/(L*0.5)*.85);
+      el("rect",{x:x(c-H/2),y:sy,width:Math.max(1,x(H)-x(0)-1),height:sh,fill:"var(--hop)","fill-opacity":op.toFixed(2),stroke:i===k?"var(--fft)":"none","stroke-width":2.5},g);
+    }
+    el("line",{x1:x(ck),x2:x(ck),y1:base,y2:sy,stroke:"var(--fft)","stroke-width":1.5,"stroke-dasharray":"2 3"},g);
+    // axe du temps
+    for(let t=0;t<=T1;t+=10){el("line",{x1:x(t),x2:x(t),y1:sy+sh+2,y2:sy+sh+7,stroke:"var(--muted)"},fig1);if(t%20===0)el("text",{x:x(t),y:sy+sh+20,"text-anchor":"middle"},fig1,t+" ms");}
+    // lecture
+    const over=Math.max(0,1-H/L), per=L/H;
+    document.getElementById("readout").innerHTML=
+      "<span>colonnes par seconde : <b>"+Math.round(SR/hop)+"</b></span>"+
+      "<span>chevauchement : <b>"+Math.round(over*100)+" %</b></span>"+
+      "<span>chaque instant est dans ≈ <b>"+(per>=1?per.toFixed(1):"0 à 1")+"</b> fenêtre(s)</span>"+
+      "<span>précision fréquence : <b>"+(SR/nfft).toFixed(2)+" Hz</b></span>";
+  }
+  nfftSel.addEventListener("change",draw1); hopIn.addEventListener("input",draw1);
+  document.getElementById("b-proj").onclick=()=>{nfftSel.value="512";hopIn.value=160;draw1();};
+  document.getElementById("b-nolap").onclick=()=>{hopIn.value=Math.min(800,+nfftSel.value);draw1();};
+  draw1();
+
+  /* ---------- Figure 2 : précision en fréquence ---------- */
+  const fig2=document.getElementById("fig2"), fx=f=>150+f*1.25; // 0..500 Hz -> 150..775
+  function ruler(y,step,label,sub,color){
+    el("text",{x:8,y:y+14,class:"lbl"},fig2,label);
+    el("text",{x:8,y:y+30},fig2,sub);
+    for(let f=0,i=0;f<500-1e-9;f+=step,i++){
+      const hit=(220>=f&&220<f+step)||(247>=f&&247<f+step);
+      el("rect",{x:fx(f),y,width:fx(Math.min(f+step,500))-fx(f)-1,height:36,fill:color,"fill-opacity":hit?.55:.12,stroke:color,"stroke-opacity":.5},fig2);
+    }
+  }
+  ruler(40,31.25,"n_fft = 512","cases de 31,25 Hz","var(--fft)");
+  ruler(120,100,"n_fft = 160","cases de 100 Hz","var(--bad)");
+  [[220,"La3 220 Hz"],[247,"Si3 247 Hz"]].forEach(([f,t],j)=>{
+    el("line",{x1:fx(f),x2:fx(f),y1:24,y2:166,stroke:"var(--fg)","stroke-width":1.6},fig2);
+    el("text",{x:fx(f)+(j?6:-6),y:18,"text-anchor":j?"start":"end",class:"lbl"},fig2,t);
+  });
+  el("text",{x:fx(240),y:100,"text-anchor":"middle",style:"fill:var(--fft);font-weight:600"},fig2,"2 cases différentes");
+  el("text",{x:fx(240),y:180,"text-anchor":"middle",style:"fill:var(--bad);font-weight:600"},fig2,"même case : impossible de les séparer");
+  for(let f=0;f<=500;f+=100){el("text",{x:fx(f),y:210,"text-anchor":"middle"},fig2,f+" Hz");}
+
+  /* ---------- Figure 3 : 257 cases FFT -> 80 filtres mel ---------- */
+  const fig3=document.getElementById("fig3"), mx3=f=>110+f*(670/8000);
+  const mel=f=>f<1000?f/(200/3):15+Math.log(f/1000)/(Math.log(6.4)/27);
+  const hz=m=>m<15?m*200/3:1000*Math.exp((m-15)*Math.log(6.4)/27);
+  el("text",{x:8,y:44,class:"lbl"},fig3,"257 cases");
+  el("text",{x:8,y:60},fig3,"FFT");
+  for(let i=0;i<257;i++){const f=i*31.25;el("line",{x1:mx3(f),x2:mx3(f),y1:30,y2:62,stroke:"var(--fft)","stroke-opacity":.6},fig3);}
+  el("text",{x:8,y:150,class:"lbl"},fig3,"80 filtres");
+  el("text",{x:8,y:166},fig3,"mel");
+  const M=mel(8000), c=[]; for(let i=0;i<82;i++)c.push(hz(M*i/81));
+  const yb3=200;
+  for(let i=1;i<=80;i++){
+    el("path",{d:`M${mx3(c[i-1]).toFixed(1)} ${yb3}L${mx3(c[i]).toFixed(1)} ${yb3-90}L${mx3(c[i+1]).toFixed(1)} ${yb3}`,fill:"var(--mel)","fill-opacity":i%2?.16:.06,stroke:"var(--mel)","stroke-width":1},fig3);
+  }
+  el("line",{x1:mx3(0),x2:mx3(8000),y1:yb3,y2:yb3,stroke:"var(--line)"},fig3);
+  el("text",{x:mx3(500),y:96,"text-anchor":"middle",style:"fill:var(--mel);font-weight:600"},fig3,"serrés : ~37 Hz");
+  el("text",{x:mx3(7000),y:96,"text-anchor":"middle",style:"fill:var(--mel);font-weight:600"},fig3,"larges : ~300 Hz");
+  for(let f=0;f<=8000;f+=1000){el("line",{x1:mx3(f),x2:mx3(f),y1:yb3+2,y2:yb3+7,stroke:"var(--muted)"},fig3);el("text",{x:mx3(f),y:yb3+24,"text-anchor":"middle"},fig3,(f/1000)+" kHz");}
+})();
+</script>
+
+</body></html>
