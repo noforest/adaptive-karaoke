@@ -20,8 +20,17 @@ def wav_to_spectro():
                  <-->
                  10 ms = hop_length
 
-    - n_fft=512, soit 32 ms : chaque colonne du spectrogramme est calculée sur un morceau d'audio de 32 ms. Ça fixe la précision en fréquence.
-    - hop_length=160, soit 10 ms : on décale la fenêtre de 10 ms pour calculer la colonne suivante. Ça fixe le nombre de colonnes par seconde, ici 100
+    - sr=16000 : 16 000 échantillons/s, fréquences jusqu'à 8 kHz. Pourquoi : la
+      voix tient sous 8 kHz, c'est le standard parole (Whisper, wav2vec) et ~3x
+      moins de données qu'en 44,1 kHz.
+    - n_fft=512, soit 32 ms : 512 valeurs par cloche, taille de la fenêtre
+      d'audio pour calculer une colonne. Pourquoi : la voix est quasi stable
+      sur 20-40 ms, donc bon compromis précision fréquence / temps.
+    - hop_length=160, soit 10 ms : décalage entre deux colonnes, donc 100
+      colonnes/s. 
+    - n_mels=80 : nombre de bandes de fréquence gardées, espacées comme
+      l'oreille (fines en grave, larges en aigu). Pourquoi : compresse les 257
+      bins FFT en 80 sans perdre l'info utile, standard (Whisper, Tacotron).
     """
     SPECTRO_DIR.mkdir(exist_ok=True)
     songs_path = os.listdir(SONGS_DIR)
