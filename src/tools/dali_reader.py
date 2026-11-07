@@ -98,10 +98,10 @@ if __name__ == "__main__":
     # print(f"f0.keys() = {f0.keys()}")
     # print(f0["f0"].shape)
 
-    songs_id = list_ids()
-    for song_id in songs_id:
-        annot = read_annotation(song_id)
-        download_song(annot, SONGS_DIR)
+    # songs_id = list_ids()
+    # for song_id in songs_id:
+    #     annot = read_annotation(song_id)
+    #     download_song(annot, SONGS_DIR)
 
 
 
