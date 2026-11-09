@@ -21,6 +21,9 @@ SONGS_DIR = DATA_DIR / "songs"
 LOGS_DIR = DATA_DIR / "logs"
 BASE_URL = "https://www.youtube.com/watch?v="
 
+FAIL_LOG = LOGS_DIR / "log_fail.txt"
+UNAVAILABLE_LOG = LOGS_DIR / "unavailable.txt"
+
 ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -\/]*[@-~])')
 
 class Annotations:
@@ -53,8 +56,44 @@ def read_f0(song_id):
 
 
 
+
+RATE_LIMIT_PATTERNS = ("429", "too many requests", "try again later", "not a bot", "rate-limit")
+UNAVAILABLE_PATTERNS = ("unavailable", "private video", "removed", "terminated",
+                        "copyright", "your country", "confirm your age")
+
+
+def classify_error(msg):
+    """'rate_limited' (retry later), 'unavailable' (never retry) or 'error'."""
+    msg = msg.lower()
+    if any(p in msg for p in RATE_LIMIT_PATTERNS):
+        return "rate_limited"
+    if any(p in msg for p in UNAVAILABLE_PATTERNS):
+        return "unavailable"
+    return "error"
+
+
+def read_unavailable():
+    """Ids not worth requesting again: unavailable.txt + permanent errors already in log_fail.txt."""
+    ids = set()
+
+    # Toutes les lignes de unavailable.txt sont des erreurs définitives
+    if UNAVAILABLE_LOG.exists():
+        for line in UNAVAILABLE_LOG.open():
+            if line.strip():
+                ids.add(line.split()[0])
+
+    # log_fail.txt contient aussi les 429 temporaires : on ne garde que les définitives
+    if FAIL_LOG.exists():
+        for line in FAIL_LOG.open():
+            if line.strip() and classify_error(line) == "unavailable":
+                ids.add(line.split()[0])
+
+    return ids
+
+
 def download_song(annot, out_dir):
-    """Download the song audio as <out_dir>/<id>.mp3. Returns True if it worked."""
+    """Download the song audio as <out_dir>/<id>.wav.
+    Returns 'ok', 'rate_limited', 'unavailable' or 'error'."""
     song_id = annot["info"]["id"]
     url = BASE_URL + annot["info"]["audio"]["url"]
     opts = {
@@ -63,6 +102,7 @@ def download_song(annot, out_dir):
         "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "wav"}],
         "quiet": True,
         "js_runtimes": {"node": {}},
+        "sleep_interval_requests": 1,  # pause between the several requests yt-dlp makes per video
     }
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     try:
@@ -70,15 +110,17 @@ def download_song(annot, out_dir):
             ydl.download([url])
         with open(LOGS_DIR / "log_successful.txt", 'a') as log:
             log.write(f"{song_id}\n")
-        return True
+        return "ok"
     except yt_dlp.utils.DownloadError as e:
-        print(f"{song_id}: {e}")
-        raw_msg = str(e)
-        clean_msg = ansi_escape.sub('', raw_msg)
-        final_msg = clean_msg.encode('ascii', 'ignore').decode()
-        with open(LOGS_DIR / "log_fail.txt", 'a') as log:
-            log.write(f"{song_id} {final_msg}\n")
-        return False
+        msg = ansi_escape.sub('', str(e)).encode('ascii', 'ignore').decode().replace("\n", " ")
+        status = classify_error(msg)
+        print(f"{song_id} [{status}]: {msg}", flush=True)
+        with open(FAIL_LOG, 'a') as log:
+            log.write(f"{song_id} {msg}\n")
+        if status == "unavailable":
+            with open(UNAVAILABLE_LOG, 'a') as log:
+                log.write(f"{song_id} {msg}\n")
+        return status
 
 
 if __name__ == "__main__":
