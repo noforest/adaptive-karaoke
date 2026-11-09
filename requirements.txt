@@ -1,0 +1,21 @@
+# Dépendances Python de free-karaoke (Python 3.12).
+#   pip install -r requirements.txt
+# Outils système requis à côté : ffmpeg (yt-dlp, torchaudio/torchcodec)
+# et un runtime JavaScript (node ou deno) que yt-dlp utilise pour YouTube.
+
+numpy
+matplotlib
+librosa
+
+# torch et torchaudio doivent rester de la même version.
+torch
+torchaudio
+# Depuis torchaudio 2.9, torchaudio.load/save passent par torchcodec.
+torchcodec
+
+openunmix
+
+# YouTube casse régulièrement yt-dlp : si les téléchargements échouent,
+# pip install -U --pre "yt-dlp[default]" (pas de --pre ici, il s'appliquerait
+# à tous les paquets, torch compris).
+yt-dlp[default]
